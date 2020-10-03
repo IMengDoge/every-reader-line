@@ -61,6 +61,8 @@ const TokenType = {
 	Key_instanceof: 49,
 	// 关键字分类：断言符
 	Key_assert: 50,
+	// 其他
+	Key_endofsrc:99
 }
 
 class lexical {
@@ -125,8 +127,46 @@ class lexical {
 			"assert": TokenType.Key_assert
 		}
 	}
+
+	// 获取下一个char
+	getNextChar() {
+		this.pos++;
+		this.position++;
+		// 判断是否符合规定，若不符合，直接返回undefined
+		if (this.position >= this.source.length) {
+			this.chr = undefined;
+			return this.chr;
+		}
+		// 获取当前char
+		this.chr = this.source.charAt(this.position);
+		// 判断当前行是否结束，如果结束，当前行索引++，当前位置(位于行)=0
+		if (this.chr === "\n") {
+			this.line++;
+			this.pos = 0;
+		}
+		return this.chr;
+	}
 	
-	// 获取下一个
+	// 构建错误提示
+	error(line,pos,msg){
+		if(line>0&&pos>0){
+			throw new Error("错误："+msg+"，位于第"+line+"行，第"+pos+"列处。");
+		}else{
+			throw new Error("未知错误！")
+		}
+	}
+	
+	// 建立跟踪
+	follow(expect,ifyes,ifno,line,pos){
+		if(this.getNextChar()===expect){
+			this.getNextChar();
+			return {type:ifyes,value:"",line,pos};
+		}
+		if(ifno===TokenType.Key_endofsrc){
+			this.error(line,pos,"跟踪错误(无法识别的字符)");
+		}
+		return {type:ifyes,value:"",line,pos};
+	}
 }
 
 
